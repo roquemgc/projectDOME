@@ -52,10 +52,10 @@ define(["require", "exports", "N/https", "../customerIntegration"], function (re
         }
     };
     exports.createCustomerBySuiteTalk = createCustomerBySuiteTalk;
-    var updateCustomerBySuiteTalk = function (customer) {
+    var updateCustomerBySuiteTalk = function (customer, customerID) {
         try {
             return https_1.default.requestSuiteTalkRest({
-                url: "https://12345.suitetalk.api.netsuite.com/services/rest/record/v1/customer/" + customer.id,
+                url: "https://12345.suitetalk.api.netsuite.com/services/rest/record/v1/customer/" + customerID,
                 body: JSON.stringify(customer),
                 method: 'PATCH'
             });

@@ -42,13 +42,14 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
         var customer = JSON.parse(ctx.value);
         var convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
         var suiteTalkResponse;
+        var customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
         log_1.default.debug('customer', customer);
-        if (RecordController.searchCustomerByEXTFormsID(customer.id))
+        if (customerID)
             suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer);
         else
-            suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+            suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer, customerID);
         if (suiteTalkResponse.code === 204)
-            log_1.default.audit('Customer ntegrated', customer);
+            log_1.default.audit('Customer integrated', customer);
         else
             log_1.default.audit('Failed to integrate customer', customer);
     };

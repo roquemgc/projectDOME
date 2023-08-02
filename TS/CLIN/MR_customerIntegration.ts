@@ -20,14 +20,15 @@ export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapCon
     const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
     let suiteTalkResponse;
 
+    const customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
     Log.debug('customer', customer);
-    if (RecordController.searchCustomerByEXTFormsID(customer.id)) 
+    if (customerID) 
         suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer);
     else 
-       suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+       suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer, customerID);
     
     if (suiteTalkResponse.code === 204) 
-        Log.audit('Customer ntegrated', customer);
+        Log.audit('Customer integrated', customer);
     else 
         Log.audit('Failed to integrate customer', customer);
 
