@@ -40,14 +40,17 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
     exports.getInputData = getInputData;
     var map = function (ctx) {
         var customer = JSON.parse(ctx.value);
-        var convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
-        var suiteTalkResponse;
-        var customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
         log_1.default.debug('customer', customer);
+        var convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
+        log_1.default.debug('convertedCustomer', convertedCustomer);
+        var customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
+        log_1.default.debug('customerID', customerID);
+        var suiteTalkResponse;
         if (customerID)
-            suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer);
+            suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, customerID);
         else
-            suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer, customerID);
+            suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+        log_1.default.debug('suiteTalkResponse', suiteTalkResponse);
         if (suiteTalkResponse.code === 204)
             log_1.default.audit('Customer integrated', customer);
         else
@@ -55,37 +58,46 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
     };
     exports.map = map;
     var summarize = function (_ctx) {
-        log_1.default.audit('EXTForms - Customers Integration executed', "ClientIntegration finished on " + new Date());
+        log_1.default.audit('EXTForms - Customers Integration', "Customers Integration finished on " + new Date());
     };
     exports.summarize = summarize;
     var convertCustomerToSuiteTalkFormat = function (customer) {
         try {
-            var convertedCustomer = {
+            var convertedCustomer_1 = {
                 id: customer.id,
-                firstName: customer.firstName,
-                lastName: customer.lastName,
-                fullName: customer.fullName,
+                firstname: customer.firstName,
+                lastname: customer.lastName,
+                custentity_clin_fullname: customer.fullName,
                 email: customer.email,
-                adressList: customer.adressList,
-                contactList: customer.contactList
+                addressbook: {
+                    items: []
+                },
+                contactList: []
             };
-            convertedCustomer.addressList.forEach(function (address) {
-                // suiteTalkField: address.id,
-                // suiteTalkField: address.street,
-                // suiteTalkField: address.number,
-                // suiteTalkField: address.neighborhood,
-                // suiteTalkField: address.zipCode,
-                // suiteTalkField: address.stateCode,
-                // suiteTalkField: address.city,
-                // suiteTalkField: address.cityIbgeCode,
-                // suiteTalkField: address.type
+            customer.addressList.forEach(function (address) {
+                convertedCustomer_1.items.adressList.push({
+                    addressbookaddress: {
+                        suiteTalkField: address.id,
+                        suiteTalkField: address.type,
+                        country: 'BR',
+                        state: address.stateCode,
+                        city: address.city,
+                        suiteTalkField: address.cityIbgeCode,
+                        zip: address.zipCode,
+                        addr1: address.street,
+                        suiteTalkField: address.number,
+                        suiteTalkField: address.neighborhood,
+                    }
+                });
             });
-            convertedCustomer.contactList.forEach(function (contact) {
+            customer.contactList.forEach(function (contact) {
+                convertedCustomer_1.contactList.push({
                 // suiteTalkField: contact.id,
                 // suiteTalkField: contact.name,
                 // suiteTalkField: contact.email
+                });
             });
-            return convertedCustomer;
+            return convertedCustomer_1;
         }
         catch (e) {
             log_1.default.error('convertCustomerToSuiteTalkFormat error', e);

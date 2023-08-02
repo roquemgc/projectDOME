@@ -17,16 +17,21 @@ export const getInputData: EntryPoints.MapReduce.getInputData = () => {
 
 export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapContext) => {
     const customer = JSON.parse(ctx.value);
+    Log.debug('customer', customer);
     const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
+    Log.debug('convertedCustomer', convertedCustomer);
+    const customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
+    Log.debug('customerID', customerID);
     let suiteTalkResponse;
 
-    const customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
-    Log.debug('customer', customer);
     if (customerID) 
-        suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer);
+        suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, customerID);
     else 
-       suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer, customerID);
+        suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
     
+    
+    Log.debug('suiteTalkResponse', suiteTalkResponse);
+
     if (suiteTalkResponse.code === 204) 
         Log.audit('Customer integrated', customer);
     else 
@@ -35,37 +40,48 @@ export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapCon
 }
 
 export const summarize: EntryPoints.MapReduce.summarize = (_ctx: EntryPoints.MapReduce.summarizeContext) => {
-    Log.audit('EXTForms - Customers Integration executed', `ClientIntegration finished on ${new Date()}`);
+    Log.audit('EXTForms - Customers Integration', `Customers Integration finished on ${new Date()}`);
 }
 
 const convertCustomerToSuiteTalkFormat = (customer: any) => {
     try {
         const convertedCustomer = {
             id: customer.id,
-            firstName: customer.firstName,
-            lastName: customer.lastName,
-            fullName: customer.fullName,
+            firstname: customer.firstName,
+            lastname: customer.lastName,
+            custentity_clin_fullname: customer.fullName,
             email: customer.email,
-            adressList: customer.adressList,
-            contactList: customer.contactList
+            addressbook: {
+                items: []
+            },
+            contactList: []
         } as any;
     
-        convertedCustomer.addressList.forEach((address: any) => {
-            // suiteTalkField: address.id,
-            // suiteTalkField: address.street,
-            // suiteTalkField: address.number,
-            // suiteTalkField: address.neighborhood,
-            // suiteTalkField: address.zipCode,
-            // suiteTalkField: address.stateCode,
-            // suiteTalkField: address.city,
-            // suiteTalkField: address.cityIbgeCode,
-            // suiteTalkField: address.type
+        customer.addressList.forEach((address: any) => {
+            convertedCustomer.items.adressList.push(
+                {
+                    addressbookaddress: {
+                        suiteTalkField: address.id,
+                        suiteTalkField: address.type,
+                        country: 'BR',
+                        state: address.stateCode,
+                        city: address.city,
+                        suiteTalkField: address.cityIbgeCode,
+                        zip: address.zipCode,
+                        addr1: address.street,
+                        suiteTalkField: address.number,
+                        suiteTalkField: address.neighborhood,
+                    }
+                }
+            );
         });
 
-        convertedCustomer.contactList.forEach((contact: any) => {
-            // suiteTalkField: contact.id,
-            // suiteTalkField: contact.name,
-            // suiteTalkField: contact.email
+        customer.contactList.forEach((contact: any) => {
+            convertedCustomer.contactList.push({
+                // suiteTalkField: contact.id,
+                // suiteTalkField: contact.name,
+                // suiteTalkField: contact.email
+            });
         });
 
         return convertedCustomer;

@@ -11,10 +11,11 @@ define(["require", "exports", "N/search"], function (require, exports, search_1)
             var searchedCustomer = search_1.default.create({
                 type: search_1.default.Type.CUSTOMER,
                 filters: [
-                    ['custbody_clin_extform_id', search_1.default.Operator.IS, customerEXTFormsID]
+                    ['internalid', search_1.default.Operator.IS, 1234444]
+                    // ['custbody_clin_extform_id', Search.Operator.IS, customerEXTFormsID]
                 ]
             }).run().getRange({ start: 0, end: 1 });
-            if (searchedCustomer)
+            if (searchedCustomer.length)
                 return searchedCustomer[0].id;
             else
                 return 0;

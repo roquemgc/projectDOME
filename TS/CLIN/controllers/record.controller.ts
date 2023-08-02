@@ -5,11 +5,12 @@ export const searchCustomerByEXTFormsID = (customerEXTFormsID: string | number) 
         const searchedCustomer = Search.create({
             type: Search.Type.CUSTOMER,
             filters: [
-                ['custbody_clin_extform_id', Search.Operator.IS, customerEXTFormsID]
+                ['internalid', Search.Operator.IS, 1234444]
+                // ['custbody_clin_extform_id', Search.Operator.IS, customerEXTFormsID]
             ]
         }).run().getRange({ start: 0, end: 1 });
 
-        if (searchedCustomer) 
+        if (searchedCustomer.length) 
             return searchedCustomer[0].id;
         else 
             return 0;

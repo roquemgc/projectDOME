@@ -20,18 +20,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "N/https", "../customerIntegration"], function (require, exports, https_1, ClientIntegration) {
+define(["require", "exports", "N/https", "../customerIntegration"], function (require, exports, https_1, CustomerIntegration) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.updateCustomerBySuiteTalk = exports.createCustomerBySuiteTalk = exports.getExtFormsCustomers = void 0;
     https_1 = __importDefault(https_1);
-    ClientIntegration = __importStar(ClientIntegration);
+    CustomerIntegration = __importStar(CustomerIntegration);
     var getExtFormsCustomers = function () {
         try {
             return JSON.parse(https_1.default.get({
                 url: 'https://2569267.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=882&deploy=1&compid=2569267&h=6560b42975570f0ac89e',
                 headers: {
-                    Authorization: "Basic " + ClientIntegration.getAuthenticationToken()
+                    Authorization: "Basic " + CustomerIntegration.getAuthenticationToken()
                 }
             }).body);
         }
@@ -43,7 +43,7 @@ define(["require", "exports", "N/https", "../customerIntegration"], function (re
     var createCustomerBySuiteTalk = function (customer) {
         try {
             return https_1.default.requestSuiteTalkRest({
-                url: 'https://12345.suitetalk.api.netsuite.com/services/rest/record/v1/customer',
+                url: 'https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/customer',
                 body: JSON.stringify(customer)
             });
         }
