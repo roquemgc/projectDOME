@@ -7,11 +7,15 @@ export const searchCustomerByEXTFormsID = (customerEXTFormsID: string | number) 
             filters: [
                 ['internalid', Search.Operator.IS, 1234444]
                 // ['custbody_clin_extform_id', Search.Operator.IS, customerEXTFormsID]
+            ],
+            columns: [
+                'adressbook.id',
+                'contactroles.contact'
             ]
-        }).run().getRange({ start: 0, end: 1 });
+        }).run().getRange({ start: 0, end: 1 }) as any;
 
         if (searchedCustomer.length) 
-            return searchedCustomer[0].id;
+            return searchedCustomer[0];
         else 
             return 0;
 

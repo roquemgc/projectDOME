@@ -27,15 +27,28 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "N/log", "./controllers/request.controller", "./controllers/record.controller"], function (require, exports, log_1, RequestController, RecordController) {
+define(["require", "exports", "N/log", "N/record", "./controllers/request.controller", "./controllers/record.controller", "./customerIntegration"], function (require, exports, log_1, record_1, RequestController, RecordController, CustomerIntegration) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.summarize = exports.map = exports.getInputData = void 0;
     log_1 = __importDefault(log_1);
+    record_1 = __importDefault(record_1);
     RequestController = __importStar(RequestController);
     RecordController = __importStar(RecordController);
+    CustomerIntegration = __importStar(CustomerIntegration);
     var getInputData = function () {
-        return RequestController.getExtFormsCustomers();
+        var rec = record_1.default.load({
+            type: record_1.default.Type.CUSTOMER,
+            id: '54207'
+        });
+        var x = rec.getSublistSubrecord({
+            fieldId: 'addressbookaddress',
+            line: 1,
+            sublistId: 'addressbook'
+        });
+        log_1.default.debug('teste', x.getFields());
+        log_1.default.debug('teste2', x);
+        return RequestController.getExtFormsCustomers(String(CustomerIntegration.getAuthenticationToken()));
     };
     exports.getInputData = getInputData;
     var map = function (ctx) {
@@ -43,13 +56,17 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
         log_1.default.debug('customer', customer);
         var convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
         log_1.default.debug('convertedCustomer', convertedCustomer);
-        var customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
-        log_1.default.debug('customerID', customerID);
+        var searchedCustomer = RecordController.searchCustomerByEXTFormsID(customer.id);
+        log_1.default.debug('customerID', searchedCustomer);
         var suiteTalkResponse;
-        if (customerID)
-            suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, customerID);
-        else
+        if (searchedCustomer) {
+            suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, searchedCustomer.id);
+            RequestController.updateContactBySuiteTalk(convertedCustomer.contactList, searchedCustomer.contactID);
+        }
+        else {
             suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+            RequestController.createCustomerBySuiteTalk(convertedCustomer.contactList);
+        }
         log_1.default.debug('suiteTalkResponse', suiteTalkResponse);
         if (suiteTalkResponse.code === 204)
             log_1.default.audit('Customer integrated', customer);
@@ -77,24 +94,24 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
             customer.addressList.forEach(function (address) {
                 convertedCustomer_1.items.adressList.push({
                     addressbookaddress: {
-                        suiteTalkField: address.id,
-                        suiteTalkField: address.type,
+                        internalid: address.id,
+                        custrecord_sit_address_l_tp_logr: address.type,
                         country: 'BR',
                         state: address.stateCode,
                         city: address.city,
-                        suiteTalkField: address.cityIbgeCode,
+                        custrecord_sit_codigo_ige: address.cityIbgeCode,
                         zip: address.zipCode,
                         addr1: address.street,
-                        suiteTalkField: address.number,
-                        suiteTalkField: address.neighborhood,
+                        custrecord_sit_address_i_numero: address.number,
+                        custrecord_sit_address_t_bairro: address.neighborhood,
                     }
                 });
             });
             customer.contactList.forEach(function (contact) {
                 convertedCustomer_1.contactList.push({
-                // suiteTalkField: contact.id,
-                // suiteTalkField: contact.name,
-                // suiteTalkField: contact.email
+                    internalid: contact.id,
+                    firstname: contact.name,
+                    email: contact.email
                 });
             });
             return convertedCustomer_1;

@@ -8,27 +8,47 @@
 
 import { EntryPoints } from 'N/types';
 import Log from 'N/log';
+import Record from 'N/record';
 import * as RequestController from './controllers/request.controller';
 import * as RecordController from './controllers/record.controller';
+import * as CustomerIntegration from './customerIntegration';
 
 export const getInputData: EntryPoints.MapReduce.getInputData = () => {
-    return RequestController.getExtFormsCustomers();
+
+    const rec = Record.load({
+        type: Record.Type.CUSTOMER,
+        id: '54207'
+    });
+
+    const x = rec.getSublistSubrecord({
+        fieldId: 'addressbookaddress',
+        line: 1,
+        sublistId: 'addressbook'
+    });
+
+    Log.debug('teste', x.getFields());
+    Log.debug('teste2', x);
+
+    return RequestController.getExtFormsCustomers(String(CustomerIntegration.getAuthenticationToken()));
 }
 
 export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapContext) => {
+    
     const customer = JSON.parse(ctx.value);
     Log.debug('customer', customer);
     const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
     Log.debug('convertedCustomer', convertedCustomer);
-    const customerID = RecordController.searchCustomerByEXTFormsID(customer.id);
-    Log.debug('customerID', customerID);
+    const searchedCustomer = RecordController.searchCustomerByEXTFormsID(customer.id);
+    Log.debug('customerID', searchedCustomer);
     let suiteTalkResponse;
 
-    if (customerID) 
-        suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, customerID);
-    else 
+    if (searchedCustomer) {
+        suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, searchedCustomer.id);
+        RequestController.updateContactBySuiteTalk(convertedCustomer.contactList, searchedCustomer.contactID)
+    } else {
         suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
-    
+        RequestController.createCustomerBySuiteTalk(convertedCustomer.contactList)
+    }
     
     Log.debug('suiteTalkResponse', suiteTalkResponse);
 
@@ -61,16 +81,16 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
             convertedCustomer.items.adressList.push(
                 {
                     addressbookaddress: {
-                        suiteTalkField: address.id,
-                        suiteTalkField: address.type,
+                        internalid: address.id,
+                        custrecord_sit_address_l_tp_logr: address.type,
                         country: 'BR',
                         state: address.stateCode,
                         city: address.city,
-                        suiteTalkField: address.cityIbgeCode,
+                        custrecord_sit_codigo_ige: address.cityIbgeCode,
                         zip: address.zipCode,
                         addr1: address.street,
-                        suiteTalkField: address.number,
-                        suiteTalkField: address.neighborhood,
+                        custrecord_sit_address_i_numero: address.number,
+                        custrecord_sit_address_t_bairro: address.neighborhood,
                     }
                 }
             );
@@ -78,9 +98,9 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
 
         customer.contactList.forEach((contact: any) => {
             convertedCustomer.contactList.push({
-                // suiteTalkField: contact.id,
-                // suiteTalkField: contact.name,
-                // suiteTalkField: contact.email
+                internalid: contact.id,
+                firstname: contact.name,
+                email: contact.email
             });
         });
 
