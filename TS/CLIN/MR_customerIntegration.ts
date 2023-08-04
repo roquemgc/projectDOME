@@ -8,55 +8,53 @@
 
 import { EntryPoints } from 'N/types';
 import Log from 'N/log';
-import Record from 'N/record';
 import * as RequestController from './controllers/request.controller';
 import * as RecordController from './controllers/record.controller';
 import * as CustomerIntegration from './customerIntegration';
 
 export const getInputData: EntryPoints.MapReduce.getInputData = () => {
-
-    const rec = Record.load({
-        type: Record.Type.CUSTOMER,
-        id: '54207'
-    });
-
-    const x = rec.getSublistSubrecord({
-        fieldId: 'addressbookaddress',
-        line: 1,
-        sublistId: 'addressbook'
-    });
-
-    Log.debug('teste', x.getFields());
-    Log.debug('teste2', x);
-
     return RequestController.getExtFormsCustomers(String(CustomerIntegration.getAuthenticationToken()));
 }
 
 export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapContext) => {
-    
     const customer = JSON.parse(ctx.value);
-    Log.debug('customer', customer);
-    const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
-    Log.debug('convertedCustomer', convertedCustomer);
-    const searchedCustomer = RecordController.searchCustomerByEXTFormsID(customer.id);
-    Log.debug('customerID', searchedCustomer);
-    let suiteTalkResponse;
-
-    if (searchedCustomer) {
-        suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, searchedCustomer.id);
-        RequestController.updateContactBySuiteTalk(convertedCustomer.contactList, searchedCustomer.contactID)
-    } else {
-        suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
-        RequestController.createCustomerBySuiteTalk(convertedCustomer.contactList)
-    }
+    try {
+        Log.debug('customer', customer);
+        const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
+        Log.debug('convertedCustomer', convertedCustomer);
+        const searchedCustomer = RecordController.searchCustomerByEXTFormsID(customer.id);
+        Log.debug('customerID', searchedCustomer);
+        let suiteTalkResponse;
     
-    Log.debug('suiteTalkResponse', suiteTalkResponse);
-
-    if (suiteTalkResponse.code === 204) 
+        if (searchedCustomer) {
+            suiteTalkResponse = RequestController.updateCustomerBySuiteTalk(convertedCustomer, searchedCustomer.id);
+    
+            convertedCustomer.contactList.forEach((contact: any) => {
+                const contactID = RecordController.searchContactByEmail(contact.email);
+                
+                contact['company'] = searchedCustomer.id;
+    
+                RequestController.updateContactBySuiteTalk(contact, contactID);
+            });
+    
+        } else { 
+            suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+            const searchedCustomerID = RecordController.searchCustomerByEXTFormsID(convertedCustomer.id);
+            RequestController.createContactBySuiteTalk(convertedCustomer.contactList);
+    
+            convertedCustomer.contactList.forEach((contact: any) => {
+                contact['company'] = searchedCustomerID;
+    
+                RequestController.createContactBySuiteTalk(contact);
+            });
+        }
+        
+        Log.debug('suiteTalkResponse', suiteTalkResponse);
         Log.audit('Customer integrated', customer);
-    else 
-        Log.audit('Failed to integrate customer', customer);
 
+    } catch (e) {
+        Log.audit('Failed to integrate customer', `Customer: ${customer}\nErro: ${e}`);
+    }
 }
 
 export const summarize: EntryPoints.MapReduce.summarize = (_ctx: EntryPoints.MapReduce.summarizeContext) => {
@@ -82,7 +80,8 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
                 {
                     addressbookaddress: {
                         internalid: address.id,
-                        custrecord_sit_address_l_tp_logr: address.type,
+                        defaultbilling: address.type == 'billing-address' ? true : false,
+                        defaultshipping: address.type == 'shipping-address' ? true : false,
                         country: 'BR',
                         state: address.stateCode,
                         city: address.city,
@@ -108,6 +107,7 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
         
     } catch (e) {
         Log.error('convertCustomerToSuiteTalkFormat error', e);
+        throw e;
     }
 }
   

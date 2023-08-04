@@ -27,7 +27,7 @@ export const createCustomerBySuiteTalk = (customer: any) => {
 export const updateCustomerBySuiteTalk = (customer: any, customerID: string | number) => {
     try {
         return Https.requestSuiteTalkRest({
-            url: `https://12345.suitetalk.api.netsuite.com/services/rest/record/v1/customer/${customerID}`,
+            url: `https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/customer/${customerID}`,
             body: JSON.stringify(customer),
             method: 'PATCH'
         });
