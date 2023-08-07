@@ -17,6 +17,7 @@
 
     Configurações:
         1. Setar o valor do parâmetro do token de autenticação da API de clientes
+        2. Alterar o status de "teste" dos scripts para liberado
 
 ## Observações
     Afim de determinar um nome para o projeto criei a pasta dos códigos como CLIN. O cliente no qual é feita a requisição dos customers foi nomeada como EXTForm.

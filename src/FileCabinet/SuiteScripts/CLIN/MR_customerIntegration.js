@@ -61,12 +61,9 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
                 var suiteTalkResponseCode = RequestController.createCustomerBySuiteTalk(convertedCustomer);
                 if (suiteTalkResponseCode == 204) {
                     newCustomerID = RecordController.searchCustomerByEXTFormsID(customer.id);
-                    log_1.default.debug('newCustomerID', newCustomerID);
                     var convertedContactList = convertCustomerContactToSuiteTalkFormat(customer.contactList, newCustomerID);
                     convertedContactList.forEach(function (convertedContact) {
-                        log_1.default.debug('convertedContact', convertedContact);
-                        var x = RequestController.createContactBySuiteTalk(convertedContact);
-                        log_1.default.debug('x', x);
+                        RequestController.createContactBySuiteTalk(convertedContact);
                     });
                 }
             }
@@ -76,6 +73,7 @@ define(["require", "exports", "N/log", "./controllers/request.controller", "./co
             if (newCustomerID)
                 RequestController.deleteCustomerById(newCustomerID);
         }
+        log_1.default.audit('Customer integrated', "Customer: " + JSON.stringify(customer.id));
     };
     exports.map = map;
     var summarize = function (_ctx) {

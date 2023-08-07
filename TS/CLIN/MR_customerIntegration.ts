@@ -42,13 +42,10 @@ export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapCon
 
             if (suiteTalkResponseCode == 204) {
                 newCustomerID = RecordController.searchCustomerByEXTFormsID(customer.id);
-                Log.debug('newCustomerID', newCustomerID);
                 const convertedContactList = convertCustomerContactToSuiteTalkFormat(customer.contactList, newCustomerID);
                 
                 convertedContactList.forEach((convertedContact: any) => {
-                    Log.debug('convertedContact', convertedContact);
-                    const x = RequestController.createContactBySuiteTalk(convertedContact);
-                    Log.debug('x', x);
+                    RequestController.createContactBySuiteTalk(convertedContact);
                 });
             }
         }
@@ -57,6 +54,7 @@ export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapCon
         if (newCustomerID)
             RequestController.deleteCustomerById(newCustomerID);
     }
+    Log.audit('Customer integrated', `Customer: ${JSON.stringify(customer.id)}`);
 }
 
 export const summarize: EntryPoints.MapReduce.summarize = (_ctx: EntryPoints.MapReduce.summarizeContext) => {
