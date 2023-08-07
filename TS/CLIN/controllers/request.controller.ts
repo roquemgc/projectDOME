@@ -15,7 +15,7 @@ export const getExtFormsCustomers = (authenticationToken: string) => {
 
 export const createCustomerBySuiteTalk = (customer: any) => {
     try {
-        return Https.requestSuiteTalkRest({
+        const suiteTalkResponse = Https.requestSuiteTalkRest({
             url: 'https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/customer',
             method: Https.Method.POST,
             headers: {
@@ -23,6 +23,10 @@ export const createCustomerBySuiteTalk = (customer: any) => {
             },
             body: JSON.stringify(customer)
         });
+        if (suiteTalkResponse.code == 204) 
+            return 204;
+        else 
+            throw suiteTalkResponse.body;
     } catch (e) {
         throw e;
     }
@@ -30,7 +34,7 @@ export const createCustomerBySuiteTalk = (customer: any) => {
 
 export const createContactBySuiteTalk = (contact: any) => {
     try {
-        return Https.requestSuiteTalkRest({
+        const suiteTalkResponse = Https.requestSuiteTalkRest({
             url: 'https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/contact',
             method: Https.Method.POST,
             headers: {
@@ -38,6 +42,46 @@ export const createContactBySuiteTalk = (contact: any) => {
             },
             body: JSON.stringify(contact),
         });
+        if (suiteTalkResponse.code == 204) 
+            return 204;
+        else 
+            throw suiteTalkResponse.body;
+    } catch (e) {
+        throw e;
+    }
+}
+
+export const deleteCustomerById = (customerID: string | number) => {
+    try {
+        const suiteTalkResponse = Https.requestSuiteTalkRest({
+            url: `https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/customer/${customerID}`,
+            method: Https.Method.DELETE,
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+        if (suiteTalkResponse.code == 204) 
+            return 204;
+        else 
+            throw suiteTalkResponse.body;
+    } catch (e) {
+        throw e;
+    }
+}
+
+export const deleteContactById = (contactID: string | number) => {
+    try {
+        const suiteTalkResponse = Https.requestSuiteTalkRest({
+            url: `https://4857231-sb2.suitetalk.api.netsuite.com/services/rest/record/v1/contact/${contactID}`,
+            method: Https.Method.DELETE,
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+        if (suiteTalkResponse.code == 204) 
+            return 204;
+        else 
+            throw suiteTalkResponse.body;
     } catch (e) {
         throw e;
     }

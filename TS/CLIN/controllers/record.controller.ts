@@ -20,21 +20,22 @@ export const searchCustomerByEXTFormsID = (customerEXTFormsID: string) => {
     }
 }
 
-export const searchContactByEmail = (contactEmail: string, customerID: string | number) => {
+export const searchCurrentCustomerContacts = (customerID: string | number) => {
     try {
-        const searchedCustomer = Search.create({
+        const contactIDList = [] as any; 
+
+        Search.create({
             type: Search.Type.CONTACT,
             filters: [
-                ['email', Search.Operator.IS, contactEmail],
-                'AND',
-                ['customer.internalid', Search.Operator.IS, customerID]
+                ['customer.internalid', Search.Operator.ANYOF, customerID]
             ]
-        }).run().getRange({ start: 0, end: 1 }) as any;
+        }).run().each((contact: any) => {
+            contactIDList.push(contact.id);
 
-        if (searchedCustomer.length) 
-            return searchedCustomer[0];
-        else 
-            return 0;
+            return true;
+        });
+
+        return contactIDList;
 
     } catch (e) {
         throw e;
@@ -47,13 +48,50 @@ export const updateCustomer = (customer: any, customerID: string | number) => {
             type: Record.Type.CUSTOMER,
             id: customerID
         });
+
         loadedCustomerRec.setValue({ fieldId: 'custentity_clin_extform_id', value: customer.id });
         loadedCustomerRec.setValue({ fieldId: 'subsidiary', value: 1 });
-        loadedCustomerRec.setValue({ fieldId: 'isperson', value: 'T' });
+        loadedCustomerRec.setValue({ fieldId: 'isperson', value: 'F' });
         loadedCustomerRec.setValue({ fieldId: 'firstname', value: customer.firstName });
         loadedCustomerRec.setValue({ fieldId: 'lastname', value: customer.lastName });
-        loadedCustomerRec.setValue({ fieldId: 'custentity_clin_fullname', value: customer.fullName });
-        loadedCustomerRec.setValue({ fieldId: 'email', value: customer.email })
+        loadedCustomerRec.setValue({ fieldId: 'companyname', value: customer.fullName });
+        loadedCustomerRec.setValue({ fieldId: 'email', value: customer.email });
+
+        const addressLineCount = loadedCustomerRec.getLineCount({ sublistId: 'addressbook' });
+
+        for (let i = addressLineCount - 1; i >= 0; i--) {
+            loadedCustomerRec.removeLine({ sublistId: 'addressbook', line: i });
+        }
+
+        customer.addressList.forEach((address: any, index: number) => {
+            loadedCustomerRec.setSublistValue({ 
+                sublistId: 'addressbook', 
+                line: index, 
+                fieldId: 'defaultbilling', 
+                value: address.type == 'billing-address' ? true : false 
+            });
+            loadedCustomerRec.setSublistValue({ 
+                sublistId: 'addressbook', 
+                line: index, 
+                fieldId: 'defaultshipping', 
+                value: address.type == 'shipping-address' ? true : false 
+            });
+
+            const addressSubRecord = loadedCustomerRec.getSublistSubrecord({
+                sublistId: 'addressbook',
+                fieldId: 'addressbookaddress',
+                line: index
+            });
+
+            addressSubRecord.setValue({ fieldId: 'country', value: 'BR' });
+            addressSubRecord.setValue({ fieldId: 'state', value: address.stateCode });
+            addressSubRecord.setValue({ fieldId: 'city', value: address.city });
+            addressSubRecord.setValue({ fieldId: 'custrecord_sit_codigo_ige', value: address.cityIbgeCode });
+            addressSubRecord.setValue({ fieldId: 'zip', value: address.zipCode });
+            addressSubRecord.setValue({ fieldId: 'addr1', value: address.street });
+            addressSubRecord.setValue({ fieldId: 'custrecord_sit_address_i_numero', value: address.number });
+            addressSubRecord.setValue({ fieldId: 'custrecord_sit_address_t_bairro', value: address.neighborhood });
+        });
 
         return loadedCustomerRec.save();
 

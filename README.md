@@ -3,7 +3,7 @@
 ## Tecnologias
     Para estruturação do projeto foi usado o framework do SuiteScript SuiteCloud, no qual facilita e padroniza a criação de projetos na plataforma. Além de auxiliar na fase de deploy dos projetos, usando dos próprios comandos do CLI do framework.
 
-    Para desenvolvimento dos scripts optei por utilizar o TypeScript como código base. Com o módulo de desenvolvimento @hitc/netsuite-types é possível criar arquiteturas e códigos mais limpos, muito por conta das interfaces e enumeradores que são disponibilizados pela ferramenta.
+    Para desenvolvimento dos scripts optei por utilizar o TypeScript como código base. Com o módulo de desenvolvimento @hitc/netsuite-types é possível criar arquiteturas e códigos mais limpos, muito por conta das interfaces e enumeradores que são disponibilizados pela ferramenta. Os códidos produzidos em TypeScript estão localizados na pasta TS, na raiz do projeto.
 
 ## Rodando o projeto
     Ferramentas necessárias na máquina:
@@ -19,6 +19,6 @@
         1. Setar o valor do parâmetro do token de autenticação da API de clientes
 
 ## Observações
-    Afim de determinar um nome para o projeto criei a pasta dos códigos como CLIN. O cliente em que é feita a requisição dos customers foi nomeada como EXTForm.
+    Afim de determinar um nome para o projeto criei a pasta dos códigos como CLIN. O cliente no qual é feita a requisição dos customers foi nomeada como EXTForm.
 
-    Os campos tipo, bairro, numero e código IBGe do subrecord de endereço são customizados para cada conta Netsuite, então dependendo da base do deploy tais campos ficarão em branco.
+    Os campos tipo, bairro, numero e código IBGe do subrecord de endereço são customizados para cada conta Netsuite, então dependendo da base do deploy esses campos ficarão em branco.

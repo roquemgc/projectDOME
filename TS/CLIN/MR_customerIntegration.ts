@@ -18,41 +18,44 @@ export const getInputData: EntryPoints.MapReduce.getInputData = () => {
 
 export const map: EntryPoints.MapReduce.map = (ctx: EntryPoints.MapReduce.mapContext) => {
     const customer = JSON.parse(ctx.value);
+    let newCustomerID = 0;
+
     try {
         const searchedCustomerID = RecordController.searchCustomerByEXTFormsID(String(customer.id));
-    
+
         if (searchedCustomerID) {
             if (RecordController.updateCustomer(customer, searchedCustomerID)) {
                 const convertedContactList = convertCustomerContactToSuiteTalkFormat(customer.contactList, searchedCustomerID);
+                const contactIDList = RecordController.searchCurrentCustomerContacts(searchedCustomerID);
+
+                contactIDList.forEach((contactID: any) => {
+                    RequestController.deleteContactById(contactID);
+                });
 
                 convertedContactList.forEach((contact: any) => {
-                    Log.debug('contact.email,', contact.email);
-                    Log.debug('contact.email,', searchedCustomerID);
-                    const contactID = RecordController.searchContactByEmail(contact.email, searchedCustomerID);
-                    Log.debug('contactID', contactID);
-                    RecordController.updateCustomerContact(contact, contactID, searchedCustomerID);
+                    RequestController.createContactBySuiteTalk(contact);
+                });
+            }
+        } else { 
+            const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
+            const suiteTalkResponseCode = RequestController.createCustomerBySuiteTalk(convertedCustomer);
+
+            if (suiteTalkResponseCode == 204) {
+                newCustomerID = RecordController.searchCustomerByEXTFormsID(customer.id);
+                Log.debug('newCustomerID', newCustomerID);
+                const convertedContactList = convertCustomerContactToSuiteTalkFormat(customer.contactList, newCustomerID);
+                
+                convertedContactList.forEach((convertedContact: any) => {
+                    Log.debug('convertedContact', convertedContact);
+                    const x = RequestController.createContactBySuiteTalk(convertedContact);
+                    Log.debug('x', x);
                 });
             }
         }
-        // } else { 
-        //     let suiteTalkResponse;
-        //     const convertedCustomer = convertCustomerToSuiteTalkFormat(customer);
-        //     suiteTalkResponse = RequestController.createCustomerBySuiteTalk(convertedCustomer);
-        
-        //     if (suiteTalkResponse.code == 204) {
-        //         const searchedCustomerID = RecordController.searchCustomerByEXTFormsID(convertedCustomer.id);
-        //         RequestController.createContactBySuiteTalk(convertedCustomer.contactList);
-        //         const convertedContactList = convertCustomerContactToSuiteTalkFormat(customer.contactList, searchedCustomerID);
-
-        //         convertedContactList.forEach((contact: any) => {
-        
-        //             Log.debug('respe1', RequestController.createContactBySuiteTalk(contact));
-        //         });
-        //     }
-        // }
-
     } catch (e) {
         Log.audit('Failed to integrate customer', `Customer: ${JSON.stringify(customer.id)}\nErro: ${e}`);
+        if (newCustomerID)
+            RequestController.deleteCustomerById(newCustomerID);
     }
 }
 
@@ -65,10 +68,9 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
         const convertedCustomer = {
             custentity_clin_extform_id: customer.id,
             subsidiary: 1,
-            isperson: true,
             firstname: customer.firstName,
             lastname: customer.lastName,
-            custentity_clin_fullname: customer.fullName,
+            companyname: customer.fullName,
             email: customer.email,
             addressbook: {
                 items: []
@@ -80,8 +82,6 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
                 {
                     addressbookaddress: {
                         internalid: address.id,
-                        defaultbilling: address.type == 'billing-address' ? true : false,
-                        defaultshipping: address.type == 'shipping-address' ? true : false,
                         country: 'BR',
                         state: address.stateCode,
                         city: address.city,
@@ -90,7 +90,9 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
                         addr1: address.street,
                         custrecord_sit_address_i_numero: address.number,
                         custrecord_sit_address_t_bairro: address.neighborhood,
-                    }
+                    },
+                    defaultbilling: address.type == 'billing-address' ? true : false,
+                    defaultshipping: address.type == 'shipping-address' ? true : false,
                 }
             );
         });
@@ -103,7 +105,7 @@ const convertCustomerToSuiteTalkFormat = (customer: any) => {
     }
 }
 
-const convertCustomerContactToSuiteTalkFormat = (contactList: any, customerID: string) => {
+const convertCustomerContactToSuiteTalkFormat = (contactList: any, customerID: string | number) => {
     try {
         const convertedContactList = [] as any;
 
@@ -111,7 +113,6 @@ const convertCustomerContactToSuiteTalkFormat = (contactList: any, customerID: s
             convertedContactList.push({
                 company: customerID,
                 subsidiary: 1,
-                internalid: contact.id,
                 firstname: contact.name,
                 email: contact.email
             });

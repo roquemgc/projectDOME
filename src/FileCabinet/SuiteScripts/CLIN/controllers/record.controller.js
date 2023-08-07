@@ -4,9 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 define(["require", "exports", "N/record", "N/search"], function (require, exports, record_1, search_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    exports.updateCustomerContact = exports.updateCustomer = exports.searchCurrentCustomerContacts = exports.searchCustomerByEXTFormsID = void 0;
     record_1 = __importDefault(record_1);
     search_1 = __importDefault(search_1);
-    exports.searchCustomerByEXTFormsID = function (customerEXTFormsID) {
+    var searchCustomerByEXTFormsID = function (customerEXTFormsID) {
         try {
             var searchedCustomer = search_1.default.create({
                 type: search_1.default.Type.CUSTOMER,
@@ -23,45 +24,78 @@ define(["require", "exports", "N/record", "N/search"], function (require, export
             throw e;
         }
     };
-    exports.searchContactByEmail = function (contactEmail, customerID) {
+    exports.searchCustomerByEXTFormsID = searchCustomerByEXTFormsID;
+    var searchCurrentCustomerContacts = function (customerID) {
         try {
-            var searchedCustomer = search_1.default.create({
+            var contactIDList_1 = [];
+            search_1.default.create({
                 type: search_1.default.Type.CONTACT,
                 filters: [
-                    ['email', search_1.default.Operator.IS, contactEmail],
-                    'AND',
-                    ['customer.internalid', search_1.default.Operator.IS, customerID]
+                    ['customer.internalid', search_1.default.Operator.ANYOF, customerID]
                 ]
-            }).run().getRange({ start: 0, end: 1 });
-            if (searchedCustomer.length)
-                return searchedCustomer[0];
-            else
-                return 0;
+            }).run().each(function (contact) {
+                contactIDList_1.push(contact.id);
+                return true;
+            });
+            return contactIDList_1;
         }
         catch (e) {
             throw e;
         }
     };
-    exports.updateCustomer = function (customer, customerID) {
+    exports.searchCurrentCustomerContacts = searchCurrentCustomerContacts;
+    var updateCustomer = function (customer, customerID) {
         try {
-            var loadedCustomerRec = record_1.default.load({
+            var loadedCustomerRec_1 = record_1.default.load({
                 type: record_1.default.Type.CUSTOMER,
                 id: customerID
             });
-            loadedCustomerRec.setValue({ fieldId: 'custentity_clin_extform_id', value: customer.id });
-            loadedCustomerRec.setValue({ fieldId: 'subsidiary', value: 1 });
-            loadedCustomerRec.setValue({ fieldId: 'isperson', value: 'T' });
-            loadedCustomerRec.setValue({ fieldId: 'firstname', value: customer.firstName });
-            loadedCustomerRec.setValue({ fieldId: 'lastname', value: customer.lastName });
-            loadedCustomerRec.setValue({ fieldId: 'custentity_clin_fullname', value: customer.fullName });
-            loadedCustomerRec.setValue({ fieldId: 'email', value: customer.email });
-            return loadedCustomerRec.save();
+            loadedCustomerRec_1.setValue({ fieldId: 'custentity_clin_extform_id', value: customer.id });
+            loadedCustomerRec_1.setValue({ fieldId: 'subsidiary', value: 1 });
+            loadedCustomerRec_1.setValue({ fieldId: 'isperson', value: 'F' });
+            loadedCustomerRec_1.setValue({ fieldId: 'firstname', value: customer.firstName });
+            loadedCustomerRec_1.setValue({ fieldId: 'lastname', value: customer.lastName });
+            loadedCustomerRec_1.setValue({ fieldId: 'companyname', value: customer.fullName });
+            loadedCustomerRec_1.setValue({ fieldId: 'email', value: customer.email });
+            var addressLineCount = loadedCustomerRec_1.getLineCount({ sublistId: 'addressbook' });
+            for (var i = addressLineCount - 1; i >= 0; i--) {
+                loadedCustomerRec_1.removeLine({ sublistId: 'addressbook', line: i });
+            }
+            customer.addressList.forEach(function (address, index) {
+                loadedCustomerRec_1.setSublistValue({
+                    sublistId: 'addressbook',
+                    line: index,
+                    fieldId: 'defaultbilling',
+                    value: address.type == 'billing-address' ? true : false
+                });
+                loadedCustomerRec_1.setSublistValue({
+                    sublistId: 'addressbook',
+                    line: index,
+                    fieldId: 'defaultshipping',
+                    value: address.type == 'shipping-address' ? true : false
+                });
+                var addressSubRecord = loadedCustomerRec_1.getSublistSubrecord({
+                    sublistId: 'addressbook',
+                    fieldId: 'addressbookaddress',
+                    line: index
+                });
+                addressSubRecord.setValue({ fieldId: 'country', value: 'BR' });
+                addressSubRecord.setValue({ fieldId: 'state', value: address.stateCode });
+                addressSubRecord.setValue({ fieldId: 'city', value: address.city });
+                addressSubRecord.setValue({ fieldId: 'custrecord_sit_codigo_ige', value: address.cityIbgeCode });
+                addressSubRecord.setValue({ fieldId: 'zip', value: address.zipCode });
+                addressSubRecord.setValue({ fieldId: 'addr1', value: address.street });
+                addressSubRecord.setValue({ fieldId: 'custrecord_sit_address_i_numero', value: address.number });
+                addressSubRecord.setValue({ fieldId: 'custrecord_sit_address_t_bairro', value: address.neighborhood });
+            });
+            return loadedCustomerRec_1.save();
         }
         catch (e) {
             throw e;
         }
     };
-    exports.updateCustomerContact = function (contact, contactID, customerID) {
+    exports.updateCustomer = updateCustomer;
+    var updateCustomerContact = function (contact, contactID, customerID) {
         try {
             var loadedContactRed = record_1.default.load({
                 type: record_1.default.Type.CONTACT,
@@ -77,4 +111,5 @@ define(["require", "exports", "N/record", "N/search"], function (require, export
             throw e;
         }
     };
+    exports.updateCustomerContact = updateCustomerContact;
 });
