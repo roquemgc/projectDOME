@@ -1,22 +1,42 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+<<<<<<< HEAD
 define(["require", "exports", "N/record", "N/search"], function (require, exports, record_1, search_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.updateCustomerContact = exports.updateCustomer = exports.searchCurrentCustomerContacts = exports.searchCustomerByEXTFormsID = void 0;
     record_1 = __importDefault(record_1);
+=======
+define(["require", "exports", "N/search"], function (require, exports, search_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.searchCustomerByEXTFormsID = void 0;
+>>>>>>> 75c9173ed0983ae927be7f38cd949e578019eb35
     search_1 = __importDefault(search_1);
     var searchCustomerByEXTFormsID = function (customerEXTFormsID) {
         try {
             var searchedCustomer = search_1.default.create({
                 type: search_1.default.Type.CUSTOMER,
                 filters: [
+<<<<<<< HEAD
                     ['custentity_clin_extform_id', search_1.default.Operator.IS, String(customerEXTFormsID)]
                 ]
             }).run().getRange({ start: 0, end: 1 });
             if (searchedCustomer.length)
                 return searchedCustomer[0].id;
+=======
+                    ['internalid', search_1.default.Operator.IS, 1234444]
+                    // ['custbody_clin_extform_id', Search.Operator.IS, customerEXTFormsID]
+                ],
+                columns: [
+                    'adressbook.id',
+                    'contactroles.contact'
+                ]
+            }).run().getRange({ start: 0, end: 1 });
+            if (searchedCustomer.length)
+                return searchedCustomer[0];
+>>>>>>> 75c9173ed0983ae927be7f38cd949e578019eb35
             else
                 return 0;
         }
@@ -25,6 +45,7 @@ define(["require", "exports", "N/record", "N/search"], function (require, export
         }
     };
     exports.searchCustomerByEXTFormsID = searchCustomerByEXTFormsID;
+<<<<<<< HEAD
     var searchCurrentCustomerContacts = function (customerID) {
         try {
             var contactIDList_1 = [];
@@ -112,4 +133,6 @@ define(["require", "exports", "N/record", "N/search"], function (require, export
         }
     };
     exports.updateCustomerContact = updateCustomerContact;
+=======
+>>>>>>> 75c9173ed0983ae927be7f38cd949e578019eb35
 });

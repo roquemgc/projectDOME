@@ -20,6 +20,6 @@
         2. Alterar o status de "teste" dos scripts para liberado
 
 ## Observações
-    Afim de determinar um nome para o projeto criei a pasta dos códigos como CLIN. O cliente no qual é feita a requisição dos customers foi nomeada como EXTForm.
+    Afim de determinar um nome para o projeto criei a pasta dos códigos como CLIN. O cliente em que é feita a requisição dos customers foi nomeada como EXTForm.
 
     Os campos tipo, bairro, numero e código IBGe do subrecord de endereço são customizados para cada conta Netsuite, então dependendo da base do deploy esses campos ficarão em branco.
