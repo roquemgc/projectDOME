@@ -1,7 +1,7 @@
 # projectDOME
 
 ## Tecnologias
-    Para estruturação do projeto foi usado o framework do SuiteScript SuiteCloud, no qual facilita e padroniza a criação de projetos na plataforma. Além de auxiliar na fase de deploy dos projetos, usando dos próprios comandos do CLI do framework.
+    Para estruturação do projeto foi usado o framework do SuiteScript, o SuiteCloud, no qual facilita e padroniza a criação de projetos na plataforma. Além de auxiliar na fase de deploy dos projetos, usando dos próprios comandos do CLI do framework.
 
     Para desenvolvimento dos scripts optei por utilizar o TypeScript como código base. Com o módulo de desenvolvimento @hitc/netsuite-types é possível criar arquiteturas e códigos mais limpos, muito por conta das interfaces e enumeradores que são disponibilizados pela ferramenta. Os códidos produzidos em TypeScript estão localizados na pasta TS, na raiz do projeto.
 
